@@ -1430,11 +1430,7 @@ begin
     CheckTrue(Json.Types['Value'] = jdtString);
     CheckTrue(Json.Types['ValueStr'] = jdtString);
 
-    {$IF declared(jdtUTF8String)}
-    CheckTrue(Json.TypesEx['Value'] = jdtUTF8String);
-    {$ELSE}
     CheckTrue(Json.TypesEx['Value'] = jdtString);
-    {$IFEND}
     CheckTrue(Json.TypesEx['ValueStr'] = jdtString);
 
     S := Json.ToJSON();
@@ -2511,11 +2507,7 @@ begin
     CheckTrue(JsonArray.Types[0] = jdtString);
     CheckTrue(JsonArray.Types[1] = jdtString);
 
-    {$IF declared(jdtUTF8String)}
-    CheckTrue(JsonArray.TypesEx[0] = jdtUTF8String);
-    {$ELSE}
     CheckTrue(JsonArray.TypesEx[0] = jdtString);
-    {$IFEND}
     CheckTrue(JsonArray.TypesEx[1] = jdtString);
 
     S := JsonArray.ToJSON();
