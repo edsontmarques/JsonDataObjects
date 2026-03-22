@@ -126,6 +126,13 @@ type
     procedure TestEnumerator;
   end;
 
+  TestValidJSON = class(TTestCase)
+  published
+    procedure TestIsValidJSON;
+    procedure TestIsValidJSONObject;
+    procedure TestIsValidJSONArray;
+  end;
+
 implementation
 
 function CompareFloatRel(Expected, Actual: Extended; RelativeError: Extended = 0.0000001): Boolean;
@@ -3250,11 +3257,77 @@ begin
   end;
 end;
 
+{ TestValidJSON }
+
+procedure TestValidJSON.TestIsValidJSON;
+begin
+  CheckFalse(IsValidJSON('abc'));
+  CheckFalse(IsValidJSON('[}'));
+  CheckFalse(IsValidJSON(''));
+  CheckTrue(IsValidJSON('"abc"')); // primitive
+  CheckTrue(IsValidJSON('120')); // primitive
+  CheckTrue(IsValidJSON('120.23')); // primitive
+  CheckTrue(IsValidJSON('true')); // primitive
+  CheckTrue(IsValidJSON('false')); // primitive
+  CheckTrue(IsValidJSON('null')); // primitive
+  CheckTrue(IsValidJSON('{}')); // empty object
+  CheckTrue(IsValidJSON('{"name": "value"}'));
+  CheckFalse(IsValidJSON('{'));
+  CheckTrue(IsValidJSON('[]')); // empty array
+  CheckFalse(IsValidJSON('['));
+  CheckTrue(IsValidJSON('[23.2]'));
+  CheckTrue(IsValidJSON('[23.2, 123]'));
+  CheckFalse(IsValidJSON('[23.2, 123'));
+end;
+
+procedure TestValidJSON.TestIsValidJSONObject;
+begin
+  CheckFalse(IsValidJSONObject('abc'));
+  CheckFalse(IsValidJSONObject('[}'));
+  CheckFalse(IsValidJSONObject(''));
+  CheckFalse(IsValidJSONObject('"abc"')); // primitive
+  CheckFalse(IsValidJSONObject('120')); // primitive
+  CheckFalse(IsValidJSONObject('120.23')); // primitive
+  CheckFalse(IsValidJSONObject('true')); // primitive
+  CheckFalse(IsValidJSONObject('false')); // primitive
+  CheckFalse(IsValidJSONObject('null')); // primitive
+  CheckTrue(IsValidJSONObject('{}')); // empty object
+  CheckTrue(IsValidJSONObject('{"name": "value"}'));
+  CheckFalse(IsValidJSONObject('{'));
+  CheckFalse(IsValidJSONObject('[]')); // empty array
+  CheckFalse(IsValidJSONObject('['));
+  CheckFalse(IsValidJSONObject('[23.2]'));
+  CheckFalse(IsValidJSONObject('[23.2, 123]'));
+  CheckFalse(IsValidJSONObject('[23.2, 123'));
+end;
+
+procedure TestValidJSON.TestIsValidJSONArray;
+begin
+  CheckFalse(IsValidJSONArray('abc'));
+  CheckFalse(IsValidJSONArray('[}'));
+  CheckFalse(IsValidJSONArray(''));
+  CheckFalse(IsValidJSONArray('"abc"')); // primitive
+  CheckFalse(IsValidJSONArray('120')); // primitive
+  CheckFalse(IsValidJSONArray('120.23')); // primitive
+  CheckFalse(IsValidJSONArray('true')); // primitive
+  CheckFalse(IsValidJSONArray('false')); // primitive
+  CheckFalse(IsValidJSONArray('null')); // primitive
+  CheckFalse(IsValidJSONArray('{}')); // empty object
+  CheckFalse(IsValidJSONArray('{"name": "value"}'));
+  CheckFalse(IsValidJSONArray('{'));
+  CheckTrue(IsValidJSONArray('[]')); // empty array
+  CheckFalse(IsValidJSONArray('['));
+  CheckTrue(IsValidJSONArray('[23.2]'));
+  CheckTrue(IsValidJSONArray('[23.2, 123]'));
+  CheckFalse(IsValidJSONArray('[23.2, 123'));
+end;
+
 initialization
   SetJsonGlobalAutoConvertDoubleStringFormatSettings(nil);
   RegisterTest(TestTJsonBaseObject.Suite);
   RegisterTest(TestTJsonArray.Suite);
   RegisterTest(TestTJsonObject.Suite);
+  RegisterTest(TestValidJSON.Suite);
 
 end.
 
