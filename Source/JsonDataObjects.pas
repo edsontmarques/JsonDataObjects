@@ -1,7 +1,7 @@
 (*****************************************************************************
 The MIT License (MIT)
 
-Copyright (c) 2015-2025 Andreas Hausladen
+Copyright (c) 2015-2026 Andreas Hausladen
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -540,7 +540,7 @@ type
     class operator Implicit(const Value: Variant): TJsonDataValueHelper; overload;
 
     function IsNull: Boolean;
-    
+
     property Typ: TJsonDataType read GetTyp;
     property Value: string read GetValue write SetValue;
     {$IFDEF SUPPORTS_UTF8STRING}
@@ -791,6 +791,13 @@ type
   public
     destructor Destroy; override;
 
+    /// <summary>
+    /// Reset() removes all elements but keeps the internal list's capacity.
+    /// </summary>
+    procedure Reset;
+    /// <summary>
+    /// Clear() removes all elements and shrinks the list's capacity.
+    /// </summary>
     procedure Clear;
     procedure Delete(Index: Integer);
     // Extract removes the object/array from the array and transfers the ownership to the caller.
@@ -989,6 +996,13 @@ type
     // The object's class must be compiled with the $M+ compiler switch or derive from TPersistent.
     procedure FromSimpleObject(AObject: TObject; ALowerCamelCase: Boolean = False);
 
+    /// <summary>
+    /// Reset() removes all properties but keeps the internal list's capacity.
+    /// </summary>
+    procedure Reset;
+    /// <summary>
+    /// Clear() removes all properties and shrinks the list's capacity.
+    /// </summary>
     procedure Clear;
     procedure Remove(const Name: string);
     procedure Delete(Index: Integer);
@@ -4602,10 +4616,19 @@ end;
 
 destructor TJsonArray.Destroy;
 begin
-  Clear;
+  Reset;
   FreeMem(FItems);
   FItems := nil;
   //inherited Destroy;
+end;
+
+procedure TJsonArray.Reset;
+var
+  I: Integer;
+begin
+  for I := 0 to FCount - 1 do
+    FItems[I].Clear;
+  FCount := 0;
 end;
 
 procedure TJsonArray.Clear;
@@ -4614,6 +4637,12 @@ var
 begin
   for I := 0 to FCount - 1 do
     FItems[I].Clear;
+  if FCount > 16 then
+  begin
+    FreeMem(FItems);
+    FItems := nil;
+    FCapacity := 0;
+  end;
   FCount := 0;
 end;
 
@@ -5309,7 +5338,7 @@ procedure TJsonArray.Assign(ASource: TJsonArray);
 var
   I: Integer;
 begin
-  Clear;
+  Reset;
   if ASource <> nil then
   begin
     if FCapacity < ASource.Count then
@@ -5324,6 +5353,7 @@ begin
   else
   begin
     FreeMem(FItems);
+    FItems := nil;
     FCapacity := 0;
   end;
 end;
@@ -5387,7 +5417,7 @@ end;
 
 destructor TJsonObject.Destroy;
 begin
-  Clear;
+  Reset;
   FreeMem(FItems);
   FreeMem(FNames);
   FreeMem(FSortedNames);
@@ -5453,6 +5483,22 @@ begin
   end;
 end;
 
+procedure TJsonObject.Reset;
+var
+  I: Integer;
+begin
+  {$IFDEF USE_LAST_NAME_STRING_LITERAL_CACHE}
+  FLastValueItem := nil;
+  {$ENDIF USE_LAST_NAME_STRING_LITERAL_CACHE}
+  for I := 0 to FCount - 1 do
+  begin
+    FNames[I] := '';
+    FItems[I].Clear;
+  end;
+  FCount := 0;
+  FFirstUnsortedNameIndex := -1;
+end;
+
 procedure TJsonObject.Clear;
 var
   I: Integer;
@@ -5464,6 +5510,16 @@ begin
   begin
     FNames[I] := '';
     FItems[I].Clear;
+  end;
+  if FCount > 16 then
+  begin
+    FreeMem(FItems);
+    FreeMem(FNames);
+    FreeMem(FSortedNames);
+    FItems := nil;
+    FNames := nil;
+    FSortedNames := nil;
+    FCapacity := 0;
   end;
   FCount := 0;
   FFirstUnsortedNameIndex := -1;
@@ -6310,6 +6366,7 @@ begin
   Count := GetPropList(AObject, PropList);
   if Count > 0 then
   begin
+    SetCapacity(Count);
     try
       for Index := 0 to Count - 1 do
       begin
@@ -6448,7 +6505,7 @@ procedure TJsonObject.Assign(ASource: TJsonObject);
 var
   I: Integer;
 begin
-  Clear;
+  Reset;
   if ASource <> nil then
   begin
     FCapacity := ASource.Count;
@@ -6468,11 +6525,14 @@ begin
       InternInitAndAssignItem(@FItems[I], @ASource.FItems[I]);
     end;
   end
-  else
+  else if FCapacity > 0 then
   begin
     FreeMem(FItems);
     FreeMem(FNames);
     FreeMem(FSortedNames);
+    FItems := nil;
+    FNames := nil;
+    FSortedNames := nil;
     FCapacity := 0;
   end;
 end;
@@ -6683,6 +6743,9 @@ begin
     FStrings[I].Name := '';
   FreeMem(FStrings);
   FreeMem(FBuckets);
+  //FStrings := nil;
+  //FBuckets := nil;
+  //FCount := 0;
 end;
 
 procedure TStringIntern.Intern(var S: string; var PropName: string);
