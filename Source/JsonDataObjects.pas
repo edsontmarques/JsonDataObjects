@@ -609,7 +609,7 @@ type
     end;
   end;
 
-  // TJsonBaseObject is the base class for TJsonArray and TJsonObject
+  // TJsonBaseObject is the base class for TJsonArray, TJsonObject and TJsonPrimitiveValue
   TJsonBaseObject = class abstract(TObject)
   private type
     TWriterAppendMethod = procedure(P: PChar; Len: Integer) of object;
@@ -727,7 +727,7 @@ type
     property Current: TJsonDataValueHelper read GetCurrent;
   end;
 
-  // TJsonArray hold a JSON array and manages the array elements.
+  // TJsonArray holds a JSON array and manages the array elements.
   TJsonArray = class {$IFDEF USE_FAST_NEWINSTANCE}sealed{$ENDIF}(TJsonBaseObject)
   private
     FItems: PJsonDataValueArray;
@@ -887,7 +887,7 @@ type
     property Current: TJsonNameValuePair read GetCurrent;
   end;
 
-  // TJsonObject hold a JSON object and manages the JSON object properties
+  // TJsonObject holds a JSON object and manages the JSON object properties
   TJsonObject = class {$IFDEF USE_FAST_NEWINSTANCE}sealed{$ENDIF}(TJsonBaseObject)
   private type
     PJsonStringArray = ^TJsonStringArray;
@@ -1576,11 +1576,9 @@ type
 
   /// <summary>
   /// Implements a parser that creates/fills the JsonDataObjects.<br/>
-  /// <ol>
-  ///   <li>PObjectData => TJsonObject</li>
-  ///   <li>PArrayData => TJsonArray</li>
-  ///   <li>PItemData => PJsonDataValue</li>
-  /// <ol>
+  ///   (PObjectData => TJsonObject, <br/>
+  ///   PArrayData => TJsonArray, <br/>
+  ///   PItemData => PJsonDataValue)
   /// </summary>
   TJsonObjectParser = class sealed(TJsonAbstractParser)
   public
@@ -5911,6 +5909,7 @@ var
   I: Integer;
   SortIndex: Integer;
 begin
+  // Sort the FSortedNames[] array, so we keep the original/insertion order of the properties for Items[], IndexOf, ...
   if FFirstUnsortedNameIndex <> -1 then
   begin
     if FCount <> 0 then
@@ -5929,7 +5928,7 @@ begin
         QuickSortNames(0, FCount - 1);
       end;
     end;
-    FFirstUnsortedNameIndex := -1; // reset so that we don't recursive in InternAddSortedName
+    FFirstUnsortedNameIndex := -1; // reset so that we don't recurse in InternAddSortedName
   end;
 end;
 
@@ -6337,6 +6336,7 @@ begin
     SortUnsortedNames;
 
   Result := InternIndexOfSortedName(Name);
+  // We got the "sorted index", but we need to return the FItems[] index
   if Result <> -1 then
     Result := FSortedNames[Result];
 end;
