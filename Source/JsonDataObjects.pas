@@ -231,7 +231,7 @@ type
     // If NullConvertsToValueTypes is True and an object is nil/null, a convertion to String, Int,
     // Long, Float, DateTime, Boolean will return ''/0/False
     // Default: False
-    NullConvertsToValueTypes: Boolean; // Isn't use for serialization. Should default to True and be deprecated.
+    NullConvertsToValueTypes: Boolean; // Isn't used for serialization. Should default to True and be deprecated.
   end;
 
   TJsonReaderProgressProc = procedure(Data: Pointer; Percentage: Integer; Position, Size: NativeInt);
@@ -642,8 +642,9 @@ type
     {$ENDIF USE_FAST_NEWINSTANCE}
 
     // ParseXxx returns nil if the JSON string is empty or consists only of white chars.
-    // If the JSON string starts with a "[" then the returned object is a TJsonArray otherwise
-    // it is a TJsonObject.
+    // If the JSON string starts with a "[" then the returned object is a TJsonArray, if is starts with
+    // a "{" it is a TJsonObject, otherwise it is a TJsonPrimitiveValue. If there are syntax error
+    // an EJsonParserException is thrown.
     class function ParseUtf8(S: PAnsiChar; Len: Integer = -1; AProgress: PJsonReaderProgressRec = nil): TJsonBaseObject; overload; static; inline;
     {$IFDEF SUPPORTS_UTF8STRING}
     class function ParseUtf8(const S: UTF8String; AProgress: PJsonReaderProgressRec = nil): TJsonBaseObject; overload; static; inline;
