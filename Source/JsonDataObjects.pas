@@ -1371,10 +1371,10 @@ function SetJsonGlobalAutoConvertDoubleStringFormatSettings(GlobalFormatSettings
 function SetJsonThreadAutoConvertDoubleStringFormatSettings(ThreadFormatSettings: PFormatSettings): PFormatSettings;
 
 /// <summary>
-/// Result True if the string is a valid json object or json array
+/// Result True if the string is a valid json object, json array or a JSON primitive
 /// starting with "{" or "[" and with valid json content
 /// </summary>
-function IsValidJSON(const JSONString: string): Boolean;
+function IsValidJSON(const JSONString: string; FailOnPrimitive: Boolean = False): Boolean;
 
 /// <summary>
 /// Result True if the string is a valid json object
@@ -10752,7 +10752,7 @@ begin
   Result := Pointer(FBytes);
 end;
 
-function IsValidJSON(const JSONString: string): Boolean;
+function IsValidJSON(const JSONString: string; FailOnPrimitive: Boolean = False): Boolean;
 var
   Parser: TJsonValidateParser;
 begin
@@ -10760,7 +10760,10 @@ begin
     Parser := TJsonValidateParser.Create(nil);
     try
       Parser.Parse(JSONString);
-      Result := Parser.DataType <> jrdtInvalid;
+      if FailOnPrimitive and (Parser.DataType = jrdtPrimitiveValue) then
+        Result := False
+      else
+        Result := Parser.DataType <> jrdtInvalid;
     finally
       Parser.Free;
     end;

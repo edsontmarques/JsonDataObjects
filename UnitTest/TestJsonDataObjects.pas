@@ -3278,6 +3278,8 @@ begin
   CheckTrue(IsValidJSON('[23.2]'));
   CheckTrue(IsValidJSON('[23.2, 123]'));
   CheckFalse(IsValidJSON('[23.2, 123'));
+  CheckFalse(IsValidJSON('"abc"', {FailOnPrimitive:=}True)); // primitive
+  CheckTrue(IsValidJSON('"abc"', {FailOnPrimitive:=}False)); // primitive
 end;
 
 procedure TestValidJSON.TestIsValidJSONObject;
